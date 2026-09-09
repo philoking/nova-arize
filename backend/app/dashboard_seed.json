@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "id": "homelab",
+      "title": "Homelab",
+      "tiles": [
+        {
+          "id": "homelab-home-assistant",
+          "name": "Home Assistant",
+          "href": "http://homeassistant.example.internal/",
+          "icon": "/icons/dashboard/home-assistant.svg",
+          "desc": "Home automation"
+        },
+        {
+          "id": "homelab-frigate",
+          "name": "Frigate",
+          "href": "http://frigate.example.internal/",
+          "icon": "/icons/dashboard/frigate.svg",
+          "desc": "Camera NVR",
+          "metric": "frigate"
+        },
+        {
+          "id": "homelab-beszel",
+          "name": "Beszel",
+          "href": "http://beszel.example.internal/",
+          "icon": "/icons/dashboard/beszel.svg",
+          "desc": "Host monitoring",
+          "metric": "beszel"
+        },
+        {
+          "id": "homelab-qdrant",
+          "name": "Qdrant",
+          "href": "http://qdrant.example.internal/dashboard",
+          "icon": "/icons/dashboard/qdrant.svg",
+          "desc": "Vector store"
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "title": "Tools",
+      "tiles": [
+        {
+          "id": "tools-gitea",
+          "name": "Gitea",
+          "href": "http://git.example.internal/",
+          "icon": "/icons/dashboard/gitea.svg",
+          "desc": "Self-hosted git"
+        },
+        {
+          "id": "tools-searxng",
+          "name": "SearXNG",
+          "href": "http://searxng.example.internal/",
+          "icon": "/icons/dashboard/searxng.svg",
+          "desc": "Metasearch"
+        }
+      ]
+    }
+  ]
+}

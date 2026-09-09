@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#030610" />
+  <title>Nova</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="/icons/nova-mark.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <link rel="stylesheet" href="/fonts/fonts.css" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- Subtle animated CRT scanline overlay (decorative). -->
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <main class="app">
+    <!-- ── TOP BAR ─────────────────────────────────────────────────────────
+         Left: HISTORY (opens the conversations drawer), the Nova star mark +
+         wordmark, and the live activity status. Right: active-timer pill,
+         devices, notifications, settings. -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button id="historyBtn" class="history-btn" type="button"
+                aria-label="Conversations" title="Conversation history">
+          <span class="hamburger" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span class="history-label">HISTORY</span>
+        </button>
+        <button id="newConvoBtn" class="chrome-btn" type="button"
+                aria-label="New conversation" title="New conversation">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" d="M12 6v12M6 12h12"/>
+          </svg>
+        </button>
+        <img class="nova-mark" id="healthDiamond" src="/icons/nova-mark.svg"
+             width="22" height="22" alt="Nova" title="Service status" />
+        <span class="wordmark">NOVA</span>
+        <span class="nova-status" id="novaStatus">STANDING BY</span>
+      </div>
+      <div class="topbar-right">
+        <button id="dashboardBtn" class="chrome-btn" type="button"
+                aria-label="Dashboard" title="Dashboard">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <rect x="3.5" y="3.5" width="7" height="7" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.7"/>
+            <rect x="13.5" y="3.5" width="7" height="7" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.7"/>
+            <rect x="3.5" y="13.5" width="7" height="7" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.7"/>
+            <rect x="13.5" y="13.5" width="7" height="7" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.7"/>
+          </svg>
+        </button>
+        <button id="timerPill" class="timer-pill" type="button" hidden
+                aria-label="Active timers" title="Active timers &amp; reminders">
+          <span class="timer-ring" id="timerRing"><span class="timer-ring-core"></span></span>
+          <span class="timer-pill-time" id="timerPillTime">0:00</span>
+          <span class="timer-pill-count" id="timerPillCount">0 ACTIVE</span>
+        </button>
+        <button id="devicesBtn" class="chrome-btn" type="button"
+                aria-label="Devices" title="Connected satellites">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <rect x="6" y="3" width="12" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="12" cy="14" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="12" cy="6.6" r="1" fill="currentColor"/>
+          </svg>
+          <span class="chrome-badge" id="devicesBadge" hidden></span>
+        </button>
+        <button id="notifBtn" class="chrome-btn" type="button"
+                aria-label="Notifications" title="Notifications">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"
+                  d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2H4.5L6 16Z"/>
+            <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                  d="M10 20a2 2 0 0 0 4 0"/>
+          </svg>
+          <span class="chrome-badge alert" id="notifBadge" hidden></span>
+        </button>
+        <button id="settingsBtn" class="chrome-btn" type="button"
+                aria-label="Settings" title="Settings">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.4" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.2 3.1"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── MAIN: conversation thread (left) + capability graph (right) ────── -->
+    <div class="main">
+      <section class="thread">
+        <div class="thread-head">
+          <span>CONVERSATION</span>
+          <span id="clock" class="thread-clock"></span>
+        </div>
+        <div id="transcript" class="transcript" aria-live="polite">
+          <div class="hint" id="hint">Tap the mic or type a command to begin.</div>
+        </div>
+      </section>
+
+      <!-- The capability graph. Nodes/edges/labels are drawn by app.js into an
+           820×780 user space; the focus wrapper zooms toward the active node. -->
+      <section class="stage" id="stage" aria-hidden="true">
+        <div class="stage-box">
+          <div class="stage-focus" id="graphFocus">
+            <svg id="graphSvg" viewBox="0 0 820 780" preserveAspectRatio="xMidYMid meet">
+              <g id="graphEdges"></g>
+              <g id="graphNodes"></g>
+            </svg>
+            <div id="graphLabels" class="graph-labels"></div>
+          </div>
+        </div>
+        <!-- Hologram FX (#75): scanlines + a periodic light sweep + a faint cyan
+             bloom over the constellation. Pure styling on top of the float +
+             twinkle; pointer-events off, sits beneath the legend/focus text. -->
+        <div class="holo-fx" aria-hidden="true">
+          <div class="holo-bloom"></div>
+          <div class="holo-scan"></div>
+        </div>
+        <!-- Live homelab vitals framing the constellation (#79): per-host CPU/mem/
+             disk + load from Beszel, rendered by app.js at the edges (slots are
+             laid out for however many hosts Beszel reports). Populated only when a
+             metric source is configured. -->
+        <div class="stage-hud" id="stageHud" aria-hidden="true"></div>
+        <div class="stage-legend">
+          <span class="lg"><span class="lg-dot nova"></span>NOVA</span>
+          <span class="lg"><span class="lg-dot prov"></span>PROVIDER</span>
+          <span class="lg"><span class="lg-dot gated"></span>CONFIG-GATED</span>
+          <span class="lg"><span class="lg-dot claude"></span>CLAUDE ESCALATION</span>
+        </div>
+        <div class="focus-label" id="focusLabel">CAPABILITY GRAPH</div>
+      </section>
+    </div>
+
+    <!-- ── COMMAND BAR ─────────────────────────────────────────────────────
+         The prompt glyph, the transparent input, a round mic, an optional
+         Claude-escalation affordance, and EXECUTE. -->
+    <footer class="commandbar">
+      <form id="commandForm" class="command-form" autocomplete="off">
+        <span class="prompt-glyph" aria-hidden="true">▸</span>
+        <textarea id="textInput" class="command-input" rows="1" aria-label="Command"
+                  placeholder="SPEAK OR TYPE A COMMAND"></textarea>
+        <button id="micBtn" class="mic-btn" type="button" aria-label="Record" title="Record">
+          <span class="mic-ping" aria-hidden="true"></span>
+          <svg class="mic-glyph" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z"/>
+            <path fill="currentColor" d="M17 11a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"/>
+          </svg>
+        </button>
+        <button id="executeBtn" class="execute-btn" type="submit">EXECUTE</button>
+      </form>
+    </footer>
+  </main>
+
+  <!-- Shared scrim behind the drawer / popovers; click to dismiss. -->
+  <div id="backdrop" class="backdrop"></div>
+
+  <!-- ── CONVERSATIONS DRAWER (slides in from the left) ─────────────────── -->
+  <aside id="convos" class="drawer" aria-label="Conversations">
+    <div class="drawer-head">
+      <span class="drawer-title">CONVERSATIONS</span>
+      <button id="convosClose" class="pop-close" type="button" aria-label="Close">✕</button>
+    </div>
+    <button id="newChatBtn" class="new-convo" type="button">+ NEW CONVERSATION</button>
+    <ul id="convoList" class="convo-list"></ul>
+    <div id="convoEmpty" class="empty-state" hidden>
+      <p class="empty-title">No conversations yet</p>
+      <p class="empty-sub">Tap the mic or type below to start your first chat.</p>
+    </div>
+  </aside>
+
+  <!-- ── TIMERS &amp; REMINDERS POPOVER ──────────────────────────────────── -->
+  <div id="timersPop" class="popover pop-timers" hidden aria-label="Timers and reminders">
+    <div class="pop-head">
+      <span class="pop-title gold">TIMERS &amp; REMINDERS</span>
+      <button class="pop-close" type="button" data-close="timersPop" aria-label="Close">✕</button>
+    </div>
+    <ul id="taskList" class="task-list"></ul>
+    <div id="taskEmpty" class="empty-state" hidden>
+      <p class="empty-title">No active timers</p>
+      <p class="empty-sub">Ask Nova to set a timer, alarm, or reminder.</p>
+    </div>
+  </div>
+
+  <!-- ── DEVICES POPOVER (connected satellites + mute/volume) ───────────── -->
+  <div id="devicesPop" class="popover pop-devices" hidden aria-label="Devices">
+    <div class="pop-head">
+      <span class="pop-title">DEVICES<span id="satCount" class="pop-count" hidden></span></span>
+      <button class="pop-close" type="button" data-close="devicesPop" aria-label="Close">✕</button>
+    </div>
+    <ul id="satList" class="sat-list"></ul>
+    <div id="satEmpty" class="empty-state" hidden>
+      <p class="empty-title">No satellites connected</p>
+      <p class="empty-sub">Nova speakers on your network show up here.</p>
+    </div>
+  </div>
+
+  <!-- ── NOTIFICATIONS TRAY ─────────────────────────────────────────────── -->
+  <div id="notifPop" class="popover pop-notif" hidden aria-label="Notifications">
+    <div class="pop-head">
+      <span class="pop-title">NOTIFICATIONS</span>
+      <button class="pop-close" type="button" data-close="notifPop" aria-label="Close">✕</button>
+    </div>
+    <ul id="notifList" class="notif-list"></ul>
+    <div id="notifEmpty" class="empty-state" hidden>
+      <p class="empty-title">Nothing yet</p>
+      <p class="empty-sub">Fired timers and completed actions appear here.</p>
+    </div>
+  </div>
+
+  <!-- Camera feed modal (#68) — opened by a show_camera tool event. The live feed
+       is HLS from Frigate's go2rtc, proxied same-origin through /api/cameras. -->
+  <div id="cameraModal" class="cam-modal" hidden role="dialog" aria-modal="true" aria-label="Camera feed">
+    <div class="cam-backdrop" data-close-cam></div>
+    <div class="cam-dialog" role="document">
+      <div class="cam-head">
+        <span class="cam-live"><span class="cam-live-dot"></span>LIVE</span>
+        <span class="cam-title" id="cameraTitle">Camera</span>
+        <button id="cameraMute" class="cam-btn" type="button" aria-label="Unmute" title="Unmute">🔇</button>
+        <button id="cameraClose" class="cam-btn cam-close" type="button" aria-label="Close" title="Close">✕</button>
+      </div>
+      <div class="cam-stage">
+        <video id="cameraVideo" class="cam-video" playsinline muted autoplay></video>
+        <div id="cameraStatus" class="cam-status" hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual PDF viewer modal (#63) — opened from a "View PDF" link in Settings or
+       a citation chip under a reply. The PDF is the original upload, served inline
+       same-origin from /api/manuals/{id}/file (jump to a page with #page=N). -->
+  <div id="pdfModal" class="pdf-modal" hidden role="dialog" aria-modal="true" aria-label="Manual">
+    <div class="pdf-backdrop" data-close-pdf></div>
+    <div class="pdf-dialog" role="document">
+      <div class="pdf-head">
+        <span class="pdf-title" id="pdfTitle">Manual</span>
+        <a id="pdfOpen" class="cam-btn" href="#" target="_blank" rel="noopener"
+           aria-label="Open in new tab" title="Open in new tab">↗</a>
+        <button id="pdfClose" class="cam-btn cam-close" type="button" aria-label="Close" title="Close">✕</button>
+      </div>
+      <div class="pdf-stage">
+        <iframe id="pdfFrame" class="pdf-frame" title="Manual PDF"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transient confirmation toast (bottom-center). -->
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- ── SETTINGS SCREEN — full-height tab that slides over the app. Values
+       are saved server-side, so a change applies to every surface. ──────── -->
+  <section id="settings" class="settings" hidden aria-label="Settings">
+    <header class="settings-bar">
+      <button id="settingsBack" class="chrome-btn" aria-label="Back" title="Back">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor" d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6z"/>
+        </svg>
+      </button>
+      <h1 class="settings-title">SETTINGS</h1>
+    </header>
+
+    <nav class="settings-tabs" role="tablist">
+      <button class="settings-tab is-active" data-tab="general" role="tab" type="button">General</button>
+      <button class="settings-tab" data-tab="persona" role="tab" type="button">Persona</button>
+      <button class="settings-tab" data-tab="home" role="tab" type="button">Home</button>
+      <button class="settings-tab" data-tab="memory" role="tab" type="button">Memory</button>
+      <button class="settings-tab" data-tab="manuals" role="tab" type="button">Manuals</button>
+      <button class="settings-tab" data-tab="notifications" role="tab" type="button">Notifications</button>
+      <button class="settings-tab" data-tab="logs" role="tab" type="button">Activity log</button>
+    </nav>
+    <p id="settingsStatus" class="settings-status" role="status"></p>
+
+    <!-- General: voice + model -->
+    <div class="settings-body" id="tab-general" role="tabpanel">
+      <div class="setting">
+        <label class="setting-label" for="voiceSetting">Voice</label>
+        <select id="voiceSetting" class="setting-select"></select>
+        <p class="setting-hint">The assistant's spoken voice. Saved on the server, so it
+          applies everywhere — this app and the satellite.</p>
+      </div>
+      <div class="setting">
+        <label class="setting-label" for="modelSetting">Model</label>
+        <select id="modelSetting" class="setting-select"></select>
+        <p class="setting-hint">The local model that answers. Applies to voice, text, and the
+          satellite; persists across restarts.</p>
+      </div>
+      <div class="setting">
+        <label class="setting-check">
+          <input id="autoEscalate" type="checkbox" />
+          <span class="setting-label">Escalate hard turns to Claude</span>
+        </label>
+        <p class="setting-hint">When the local model falls short on a turn — an empty answer or a
+          punt — automatically retry it on Claude, which can drive the same tools (manuals, web,
+          Home Assistant…). Uses the Anthropic API (costs tokens) and sends that turn off your LAN;
+          replies from Claude are badged <strong>✦ Claude</strong>. Requires an API key.</p>
+      </div>
+    </div>
+
+    <!-- Persona: the voice/text system prompts -->
+    <div class="settings-body" id="tab-persona" role="tabpanel" hidden>
+      <div class="setting">
+        <label class="setting-label" for="voicePromptSetting">Voice persona</label>
+        <textarea id="voicePromptSetting" class="setting-textarea" rows="5"
+                  aria-label="Voice persona"></textarea>
+        <div class="setting-actions">
+          <button id="voicePromptReset" class="text-btn ghost" type="button">Reset to default</button>
+          <button id="voicePromptSave" class="text-btn primary" type="button">Save</button>
+        </div>
+        <p class="setting-hint">How the assistant behaves in <strong>spoken</strong> replies —
+          keep it short and speakable.</p>
+      </div>
+      <div class="setting">
+        <label class="setting-label" for="textPromptSetting">Text persona</label>
+        <textarea id="textPromptSetting" class="setting-textarea" rows="5"
+                  aria-label="Text persona"></textarea>
+        <div class="setting-actions">
+          <button id="textPromptReset" class="text-btn ghost" type="button">Reset to default</button>
+          <button id="textPromptSave" class="text-btn primary" type="button">Save</button>
+        </div>
+        <p class="setting-hint">How it behaves in <strong>typed</strong> replies — may use
+          markdown and more detail.</p>
+      </div>
+    </div>
+
+    <!-- Home: the curated Home Assistant devices Nova may control -->
+    <div class="settings-body" id="tab-home" role="tabpanel" hidden>
+      <div class="setting">
+        <div class="setting-head">
+          <span class="setting-label">Home Assistant devices</span>
+          <button id="haRefresh" class="text-btn" type="button">Refresh</button>
+        </div>
+        <p class="setting-hint">Nova can see and control <strong>only</strong> the entities you
+          label <code>nova</code> in Home Assistant. To add one, apply that label to the entity
+          in HA (Settings → Areas, labels &amp; zones → Labels), then Refresh.</p>
+        <ul id="haDeviceList" class="ha-list"></ul>
+        <p id="haDeviceEmpty" class="setting-hint" hidden></p>
+      </div>
+    </div>
+
+    <!-- Memory tab — durable facts Nova remembers about the user. -->
+    <div class="settings-body" id="tab-memory" role="tabpanel" hidden>
+      <p class="setting-hint">Durable facts Nova remembers about you and uses in its replies.
+        <strong>Long-term</strong> facts are kept indefinitely; <strong>This month</strong>
+        facts expire in about 30 days; <strong>Today</strong> facts clear at end of day. Nova
+        also remembers things you tell it in conversation.</p>
+      <form id="memAddForm" class="mem-add" autocomplete="off">
+        <input id="memText" class="setting-input" type="text"
+               placeholder="Add something to remember…" aria-label="New memory" />
+        <select id="memTier" class="log-level" aria-label="How long to keep it">
+          <option value="long">Long-term</option>
+          <option value="mid">This month</option>
+          <option value="short">Today</option>
+        </select>
+        <button class="text-btn primary" type="submit">Add</button>
+      </form>
+      <div id="memList" class="mem-list"></div>
+      <p id="memEmpty" class="setting-hint" hidden>Nothing remembered yet.</p>
+      <p id="memStatus" class="settings-status" role="status"></p>
+    </div>
+
+    <!-- Manuals tab — upload product/tool PDF manuals; Nova extracts, embeds, and
+         indexes them (Qdrant) so it can answer questions from them (#63). -->
+    <div class="settings-body" id="tab-manuals" role="tabpanel" hidden>
+      <p class="setting-hint">Upload the PDF manuals for your tools and appliances. Nova reads them,
+        indexes the text, and answers questions from them — cited by manual and page — instead of
+        guessing. Pick several at once to bulk-import; they index in the background. Text-based PDFs
+        only; scanned/image-only PDFs can't be read.</p>
+      <form id="manualAddForm" class="mem-add" autocomplete="off">
+        <input id="manualFile" class="setting-input" type="file" accept="application/pdf,.pdf" multiple
+               aria-label="Manual PDFs to upload" />
+        <button id="manualUpload" class="text-btn primary" type="submit">Upload</button>
+      </form>
+      <div id="manualDisabled" class="setting-hint" hidden>
+        Manuals aren't configured on the server. Set <code>NOVA_QDRANT_URL</code> and pull the
+        embedding model (<code>ollama pull nomic-embed-text</code>) to enable this.
+      </div>
+      <!-- Library toolbar (search / sort / count) — appears once there are manuals. -->
+      <div id="manualTools" class="manual-tools" hidden>
+        <input id="manualSearch" class="setting-input manual-search" type="search"
+               placeholder="Search manuals…" aria-label="Search manuals" autocomplete="off" />
+        <select id="manualSort" class="setting-select manual-sort" aria-label="Sort manuals">
+          <option value="az">A–Z</option>
+          <option value="new">Newest</option>
+          <option value="status">Status</option>
+        </select>
+      </div>
+      <p id="manualCount" class="setting-hint manual-count" hidden></p>
+      <ul id="manualList" class="ha-list"></ul>
+      <p id="manualEmpty" class="setting-hint" hidden>No manuals uploaded yet.</p>
+      <p id="manualStatus" class="settings-status" role="status"></p>
+    </div>
+
+    <!-- Notifications tab — phone push for reminders/timers/alarms via MQTT. -->
+    <div class="settings-body" id="tab-notifications" role="tabpanel" hidden>
+      <p class="setting-hint">Send reminders, timers and alarms to your phone even when this app
+        is closed. Nova publishes to an MQTT topic; a single Home Assistant automation forwards it
+        to the HA companion app. Saved on the server, so it applies everywhere — this app and the
+        satellite.</p>
+      <div class="setting">
+        <label class="setting-check">
+          <input id="notifyEnabled" type="checkbox" />
+          <span class="setting-label">Enable notifications</span>
+        </label>
+        <p class="setting-hint">Master switch. When off, nothing is published.</p>
+      </div>
+      <div class="setting">
+        <span class="setting-label">Categories</span>
+        <label class="setting-check"><input type="checkbox" class="notifyCat" value="reminders" /> Reminders</label>
+        <label class="setting-check"><input type="checkbox" class="notifyCat" value="timers" /> Timers</label>
+        <label class="setting-check"><input type="checkbox" class="notifyCat" value="alarms" /> Alarms</label>
+        <p class="setting-hint">Which kinds of alerts get pushed to your phone.</p>
+      </div>
+      <div class="setting">
+        <label class="setting-label" for="notifyAddress">MQTT broker</label>
+        <input id="notifyAddress" class="setting-input" type="text"
+               placeholder="host:port — e.g. alfred.example.internal:1883" />
+        <p class="setting-hint">Your broker's LAN address and port.</p>
+      </div>
+      <div class="setting">
+        <label class="setting-label" for="notifyTopic">Topic</label>
+        <input id="notifyTopic" class="setting-input" type="text" placeholder="nova/notify" />
+        <p class="setting-hint">The topic Nova publishes to; your Home Assistant automation subscribes to it.</p>
+      </div>
+      <div class="setting-actions">
+        <button id="notifyTest" class="text-btn" type="button">Send test</button>
+        <button id="notifySave" class="text-btn primary" type="button">Save</button>
+      </div>
+    </div>
+
+    <!-- Activity log tab — verbose rolling record of everything the server does. -->
+    <div class="logs-body" id="tab-logs" role="tabpanel" hidden>
+      <div class="logs-toolbar">
+        <p class="log-caption">The server records everything it does — every request,
+          tool call, upstream call, and error — continuously for the last
+          <span id="logRetention">48</span> hours. Newest at the bottom; use
+          <strong>Load older</strong> to page back.</p>
+        <div class="log-actions">
+          <label class="log-toggle" title="Hide routine polling — health, heartbeat/presence, timer &amp; alarm checks, and config/voice fetches">
+            <input type="checkbox" id="logHideHealth" checked /> Hide routine polling
+          </label>
+          <select id="logLevel" class="log-level" aria-label="Minimum level">
+            <option value="">All</option>
+            <option value="INFO">Info</option>
+            <option value="WARNING">Warnings</option>
+            <option value="ERROR">Errors</option>
+          </select>
+          <button id="logRefresh" class="text-btn" type="button">Refresh</button>
+          <button id="logClear" class="text-btn" type="button">Clear</button>
+        </div>
+      </div>
+      <button id="logOlder" class="text-btn log-older" type="button" hidden>↑ Load older</button>
+      <pre id="logView" class="log-view" aria-live="polite"></pre>
+      <p id="logEmpty" class="setting-hint" hidden>No activity logged yet.</p>
+    </div>
+  </section>
+
+  <!-- ── DASHBOARD (Homepage replacement): editable link groups + (soon) live
+       server metrics. Chat stays the landing view; this is a separate screen. ── -->
+  <section id="dashboard" class="dashboard" hidden aria-label="Dashboard">
+    <header class="settings-bar">
+      <button id="dashboardBack" class="chrome-btn" aria-label="Back" title="Back">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor" d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6z"/>
+        </svg>
+      </button>
+      <h1 class="settings-title">DASHBOARD</h1>
+      <div class="dash-actions">
+        <button id="dashAddGroup" class="text-btn" type="button" hidden>+ Group</button>
+        <button id="dashReset" class="text-btn" type="button" hidden>Reset</button>
+        <button id="dashEditBtn" class="text-btn" type="button">Edit</button>
+        <button id="dashDone" class="text-btn primary" type="button" hidden>Done</button>
+      </div>
+    </header>
+    <p id="dashStatus" class="settings-status" role="status"></p>
+    <div id="dashboardBody" class="dashboard-body"></div>
+  </section>
+
+  <audio id="player" hidden></audio>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

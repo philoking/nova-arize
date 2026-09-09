@@ -1,0 +1,27 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+httpx==0.28.1
+python-multipart==0.0.20
+anthropic==0.116.0
+# Timezone database for zoneinfo — the slim base image ships no system zoneinfo,
+# so reminders at clock times ("at 5pm") need this to resolve NOVA_VOICE_TIMEZONE.
+tzdata==2025.2
+# Async MQTT client — publishes reminder/timer/alarm notifications to the broker
+# (#16), where a Home Assistant automation forwards them to the phone.
+aiomqtt==2.3.0
+# Pure-Python PDF text extraction for the shop-manual RAG (#63). No system deps;
+# handles text-based PDFs (scanned/image-only PDFs would need OCR, out of scope).
+pypdf==5.1.0
+# Arize AX tracing (optional at runtime — the app runs fine without these; see
+# app/tracing.py, which stays inert unless ARIZE_SPACE_ID + ARIZE_API_KEY are
+# set). arize-otel wires the OTLP exporter; the anthropic instrumentor is the
+# one auto-instrumentation from Arize's quickstart that fits this codebase —
+# the local qwen3 leg speaks raw HTTP to Ollama and is hand-instrumented.
+arize-otel==0.13.0
+# PINNED DELIBERATELY to the 1.x line. The instrumentor's 2.x releases require
+# `anthropic>=1.0.0`; this app is on 0.116.0. The version check is not enforced at
+# install time (the dep sits behind an optional `instruments` extra) and
+# `instrument()` does not raise — it logs one DependencyConflict line and silently
+# does nothing, so the escalation leg looks traced and isn't. 1.1.2 accepts
+# anthropic>=0.84.0. Revisit only alongside an anthropic 1.x upgrade.
+openinference-instrumentation-anthropic==1.1.2

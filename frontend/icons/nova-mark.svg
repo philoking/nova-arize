@@ -1,0 +1,22 @@
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nova">
+  <defs>
+    <linearGradient id="nv-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffdd82"/>
+      <stop offset="1" stop-color="#f2a01e"/>
+    </linearGradient>
+    <radialGradient id="nv-core" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#cfe0ff"/>
+      <stop offset="1" stop-color="#6d8bff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- diagonal rays: a shorter, thinner star rotated 45° → an 8-point nova burst -->
+  <path transform="rotate(45 16 16)" opacity="0.5" fill="url(#nv-gold)"
+        d="M16 8 L17.06 14.94 L24 16 L17.06 17.06 L16 24 L14.94 17.06 L8 16 L14.94 14.94 Z"/>
+  <!-- primary four-point star, sharp points -->
+  <path fill="url(#nv-gold)"
+        d="M16 1 L18.47 13.53 L31 16 L18.47 18.47 L16 31 L13.53 18.47 L1 16 L13.53 13.53 Z"/>
+  <!-- glowing Nova-force core -->
+  <circle cx="16" cy="16" r="6.5" fill="url(#nv-core)"/>
+  <circle cx="16" cy="16" r="2.6" fill="#ffffff"/>
+</svg>

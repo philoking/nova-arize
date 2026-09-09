@@ -1,0 +1,58 @@
+# Nova Voice — run the assistant in a container.
+#
+#   docker compose -f infra/docker-compose.yml up -d --build
+#
+# Configuration comes from the repo-root .env (see .env.example), loaded via
+# env_file below so it applies no matter which directory you run compose from.
+# Everything has a sane default in backend/app/config.py, so .env is optional —
+# the one thing you'll set is NOVA_VOICE_HA_TOKEN to enable Home Assistant.
+#
+# Upstream services default to Nova over the LAN (nova.example.internal), which
+# works from a dev machine and from a container on Nova. To reach host-published
+# ports directly on Nova, set the URLs to http://host.docker.internal:<port>.
+services:
+  nova-voice:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    image: nova-voice:latest
+    container_name: nova-voice
+    restart: unless-stopped
+    ports:
+      - "${NOVA_VOICE_PORT:-8100}:8000"
+    # Inject the repo-root .env straight into the container. Path is relative to
+    # this file (infra/), so ../.env is the repo root. Optional: absent .env is
+    # fine (defaults apply). This is why the token survives a plain `up -d`.
+    env_file:
+      - path: ../.env
+        required: false
+    # User-editable settings and the conversation-history DB live on a named
+    # volume so they survive `up -d --build`, which rebuilds the image and wipes
+    # its filesystem. `environment` wins over `env_file`, so these paths are fixed
+    # regardless of .env.
+    environment:
+      NOVA_VOICE_SETTINGS_FILE: /data/settings.json
+      NOVA_VOICE_HISTORY_DB: /data/nova.db
+      # The link dashboard's saved edits (#78) live on the volume too, so a
+      # rebuild-deploy doesn't revert the dashboard to the packaged seed.
+      NOVA_VOICE_DASHBOARD_FILE: /data/dashboard.json
+      # Uploaded PDF manuals (#63) live on the volume too, so they survive rebuilds.
+      NOVA_MANUALS_DIR: /data/manuals
+      # So reminders like "at 5pm" resolve in the local (Nova host) timezone.
+      # Change to your zone; resolved via the tzdata package, not system files.
+      NOVA_VOICE_TIMEZONE: America/Los_Angeles
+    volumes:
+      - nova-voice-data:/data
+    # Lets you point the service URLs at http://host.docker.internal:<port>.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/config').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+volumes:
+  # Persists user-editable settings across image rebuilds.
+  nova-voice-data:
