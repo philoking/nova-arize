@@ -47,7 +47,7 @@ frontend/       the PWA (no build step: plain HTML/CSS/JS, ES modules)
 Arize's 30+ advertised integrations covered 1 of the 9 components that needed
 measurement, and a second one *looked* covered and was not. After the manual
 instrumentation in [`backend/app/tracing.py`](backend/app/tracing.py) coverage is
-8 of 9; STT and TTS remain, both optional. Tracing also turned up two production
+7 of 9; STT and TTS remain, both optional. Tracing also turned up two production
 bugs that had been live for weeks.
 
 ---
