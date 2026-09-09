@@ -235,23 +235,6 @@ entire point of building the corpus that way.
 
 ---
 
-## What the friction looked like
-
-Instrumenting this took two days, and I logged 29 numbered findings against the
-platform as I hit them. They are catalogued in the write-up that accompanies this
-repo; the short version is that the expensive ones share a shape.
-
-F-15, F-16 and F-08/F-17 are the same problem three times over: the platform
-cannot distinguish "intentional" from "broken" from "not yet." An instrumentor
-that never attached, spans that can never be priced, and a model deliberately
-left unpriced all render as the same neutral empty state, while the platform
-already holds the information needed to tell them apart.
-
-That is the same failure mode as the search bug above. Running into it in my own
-code first is most of why I think it generalises.
-
----
-
 ## Running it
 
 You can't run the whole thing. It needs a GPU box with Ollama, faster-whisper and
